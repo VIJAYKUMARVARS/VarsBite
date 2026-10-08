@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>VarsBite — Food Delivery & Ordering</title>
+  <title>VarsBite — Multi-Restaurant Food Delivery</title>
   
-  <!-- Tailwind CSS via CDN -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -21,15 +21,15 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans">
 
-  <!-- Navigation Bar -->
+  <!-- Header / Navigation -->
   <header class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('home')">
+      <div class="flex items-center space-x-2 cursor-pointer" onclick="showView('home')">
         <span class="text-2xl font-black text-brand-600 tracking-tight">VARSBITE</span>
       </div>
 
       <div class="flex items-center space-x-4">
-        <!-- Cart Button -->
+        <!-- Cart Icon -->
         <button onclick="showView('cart')" class="relative p-2 text-gray-700 hover:text-brand-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -37,7 +37,7 @@
           <span id="cartBadge" class="hidden absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
         </button>
 
-        <!-- Auth Controls -->
+        <!-- Auth Status -->
         <div id="authSection">
           <button onclick="showAuthModal()" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700">Sign In</button>
         </div>
@@ -45,17 +45,16 @@
     </div>
   </header>
 
-  <!-- Notification Banner -->
+  <!-- Banner Alerts -->
   <div id="banner" class="hidden max-w-6xl mx-auto px-4 mt-4 w-full">
-    <div id="bannerContent" class="p-4 rounded-xl text-sm font-medium"></div>
+    <div id="bannerContent" class="p-3.5 rounded-xl text-sm font-medium"></div>
   </div>
 
   <!-- Main Container -->
   <main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full">
 
-    <!-- VIEW 1: HOME (Restaurants & Categories) -->
+    <!-- VIEW: HOME -->
     <section id="viewHome" class="space-y-8">
-      <!-- Hero -->
       <div class="bg-gradient-to-r from-brand-600 to-amber-500 rounded-3xl p-8 text-white shadow-sm flex flex-col md:flex-row items-center justify-between">
         <div class="max-w-md">
           <h1 class="text-3xl sm:text-4xl font-black leading-tight">Delicious food, delivered to you.</h1>
@@ -63,23 +62,20 @@
         </div>
       </div>
 
-      <!-- Restaurants List -->
       <div>
         <h2 class="text-xl font-black text-gray-900 mb-4">Popular Restaurants</h2>
-        <div id="restaurantsLoading" class="text-sm text-gray-400 py-8 text-center">Loading live restaurants from Firebase...</div>
+        <div id="restaurantsLoading" class="text-sm text-gray-400 py-8 text-center">Connecting to VarsBite Firebase...</div>
         <div id="restaurantsContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
       </div>
     </section>
 
-    <!-- VIEW 2: RESTAURANT DETAILS & MENU -->
+    <!-- VIEW: RESTAURANT & MENU -->
     <section id="viewRestaurant" class="hidden space-y-6">
       <button onclick="showView('home')" class="text-sm font-semibold text-brand-600 flex items-center gap-1">
         ← Back to Restaurants
       </button>
 
-      <div id="restaurantHero" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-2">
-        <!-- Injected Dynamically -->
-      </div>
+      <div id="restaurantHero" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-2"></div>
 
       <div>
         <h3 class="text-lg font-black text-gray-900 mb-4">Menu Items</h3>
@@ -87,7 +83,7 @@
       </div>
     </section>
 
-    <!-- VIEW 3: CART & CHECKOUT -->
+    <!-- VIEW: CART & CHECKOUT -->
     <section id="viewCart" class="hidden space-y-6 max-w-2xl mx-auto">
       <button onclick="showView('home')" class="text-sm font-semibold text-brand-600 flex items-center gap-1">
         ← Continue Shopping
@@ -96,7 +92,7 @@
       <h2 class="text-2xl font-black text-gray-900">Your Cart</h2>
       
       <div id="cartEmptyState" class="hidden bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm text-gray-500">
-        Your cart is empty. Explore restaurants to add delicious meals!
+        Your cart is empty. Add delicious food from restaurants!
       </div>
 
       <div id="cartContent" class="space-y-6">
@@ -104,7 +100,6 @@
           <div id="cartRestaurantName" class="text-xs font-bold text-gray-400 uppercase tracking-wider"></div>
           <div id="cartItemsList" class="divide-y divide-gray-100"></div>
           
-          <!-- Price Breakdown -->
           <div class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600">
             <div class="flex justify-between"><span>Item Total</span><span id="billItemTotal" class="font-bold text-gray-900">₹0</span></div>
             <div class="flex justify-between"><span>Delivery Fee</span><span id="billDeliveryFee">₹40</span></div>
@@ -116,26 +111,25 @@
           </div>
         </div>
 
-        <!-- Delivery Address Input -->
+        <!-- Delivery Address -->
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-          <h3 class="text-sm font-bold text-gray-900">Delivery Address</h3>
+          <h3 class="text-sm font-bold text-gray-900">Delivery Details</h3>
           <input type="text" id="custName" placeholder="Full Name" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
           <input type="tel" id="custPhone" placeholder="Mobile Number" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
-          <textarea id="custAddress" rows="2" placeholder="House/Flat No, Street, Landmark, Pincode" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600"></textarea>
+          <textarea id="custAddress" rows="2" placeholder="House/Flat No, Street, Landmark, City, Pincode" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600"></textarea>
         </div>
 
-        <!-- Checkout Actions -->
         <button onclick="handlePlaceCodOrder()" id="btnPlaceOrder" class="w-full py-3.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition">
           Place Cash on Delivery (COD) Order
         </button>
       </div>
     </section>
 
-    <!-- VIEW 4: ORDER SUCCESS / TRACKING -->
+    <!-- VIEW: ORDER TRACKING -->
     <section id="viewOrderSuccess" class="hidden space-y-6 max-w-lg mx-auto text-center py-10">
       <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl font-black mx-auto">✓</div>
-      <h2 class="text-2xl font-black text-gray-900">Order Placed Successfully!</h2>
-      <p class="text-sm text-gray-500">Your order has been recorded in the VarsBite system with status <span class="font-bold text-gray-800">PLACED</span>.</p>
+      <h2 class="text-2xl font-black text-gray-900">Order Placed!</h2>
+      <p class="text-sm text-gray-500">Your order has been recorded into the live database.</p>
       
       <div id="liveOrderCard" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-left text-xs space-y-2"></div>
 
@@ -146,14 +140,14 @@
 
   </main>
 
-  <!-- Auth Modal -->
+  <!-- Login/Signup Modal -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
     <div class="bg-white max-w-sm w-full p-6 rounded-3xl space-y-4 shadow-xl">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-black text-gray-900">Sign In to VarsBite</h3>
         <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
       </div>
-      <p class="text-xs text-gray-500">Uses the existing Firebase Authentication system shared with the Android app.</p>
+      <p class="text-xs text-gray-500">Sign in with the same account used in the Android App.</p>
       
       <div class="space-y-3">
         <input type="email" id="authEmail" placeholder="Email Address" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
@@ -164,22 +158,21 @@
     </div>
   </div>
 
-  <!-- Firebase v10 Modular SDK via CDN -->
+  <!-- Firebase Modular Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, getDoc, addDoc, serverTimestamp, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ----------------------------------------------------
-    // 1. FIREBASE CONFIGURATION (ENTER YOUR KEYS HERE)
-    // ----------------------------------------------------
+    // --- YOUR LIVE VARSBITE FIREBASE CONFIGURATION ---
     const firebaseConfig = {
-      apiKey: "YOUR_FIREBASE_API_KEY",
-      authDomain: "varsbite-prod.firebaseapp.com",
-      projectId: "varsbite-prod",
-      storageBucket: "varsbite-prod.appspot.com",
-      messagingSenderId: "102938475610",
-      appId: "1:102938475610:web:9c8e1d2f3a4b5c6d"
+      apiKey: "AIzaSyDLklbvfcCIoGn0bDL2yk4UdQYYXCHQihM",
+      authDomain: "varsbite.firebaseapp.com",
+      projectId: "varsbite",
+      storageBucket: "varsbite.firebasestorage.app",
+      messagingSenderId: "399656103658",
+      appId: "1:399656103658:web:8d73b9d0a15adb170ef193",
+      measurementId: "G-SFD1J61P9W"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -189,9 +182,9 @@
     // Global State
     let currentUser = null;
     let currentRestaurant = null;
-    let cart = []; // [{ menuItem, restaurantId, restaurantName, quantity }]
+    let cart = [];
 
-    // Expose helpers to window scope
+    // Expose functions to window
     window.showView = showView;
     window.showAuthModal = () => document.getElementById('authModal').classList.remove('hidden');
     window.closeAuthModal = () => document.getElementById('authModal').classList.add('hidden');
@@ -203,26 +196,24 @@
     window.updateCartQty = updateCartQty;
     window.handlePlaceCodOrder = handlePlaceCodOrder;
 
-    // Auth Observer
+    // Auth State Observer
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       renderAuthSection();
-      if (user) {
-        closeAuthModal();
-      }
+      if (user) closeAuthModal();
     });
 
     function renderAuthSection() {
-      const container = document.getElementById('authSection');
+      const el = document.getElementById('authSection');
       if (currentUser) {
-        container.innerHTML = `
+        el.innerHTML = `
           <div class="flex items-center space-x-2">
             <span class="text-xs font-semibold text-gray-700">${currentUser.email.split('@')[0]}</span>
             <button onclick="handleLogout()" class="text-xs text-red-600 font-bold hover:underline">Logout</button>
           </div>
         `;
       } else {
-        container.innerHTML = `
+        el.innerHTML = `
           <button onclick="showAuthModal()" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700">Sign In</button>
         `;
       }
@@ -246,7 +237,6 @@
       if (!e || !p) return notify('Please enter email & password', 'error');
       try {
         const cred = await createUserWithEmailAndPassword(auth, e, p);
-        // Default role: customer (No self-assigning admin)
         await setDoc(doc(db, 'users', cred.user.uid), {
           uid: cred.user.uid,
           email: e,
@@ -269,15 +259,13 @@
       const bc = document.getElementById('bannerContent');
       b.classList.remove('hidden');
       bc.textContent = msg;
-      if (type === 'error') bc.className = 'p-3 rounded-xl text-sm bg-red-100 text-red-800 border border-red-200';
-      else if (type === 'success') bc.className = 'p-3 rounded-xl text-sm bg-green-100 text-green-800 border border-green-200';
-      else bc.className = 'p-3 rounded-xl text-sm bg-amber-100 text-amber-800 border border-amber-200';
+      if (type === 'error') bc.className = 'p-3.5 rounded-xl text-sm bg-red-100 text-red-800 border border-red-200';
+      else if (type === 'success') bc.className = 'p-3.5 rounded-xl text-sm bg-green-100 text-green-800 border border-green-200';
+      else bc.className = 'p-3.5 rounded-xl text-sm bg-amber-100 text-amber-800 border border-amber-200';
       setTimeout(() => b.classList.add('hidden'), 4000);
     }
 
-    // ----------------------------------------------------
-    // 2. RESTAURANTS & MENU LOADER
-    // ----------------------------------------------------
+    // Load Restaurants from Firestore
     async function loadRestaurants() {
       const container = document.getElementById('restaurantsContainer');
       const loading = document.getElementById('restaurantsLoading');
@@ -293,12 +281,12 @@
           const r = { id: d.id, ...d.data() };
           return `
             <div onclick="openRestaurant('${r.id}')" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md cursor-pointer transition">
-              <div class="h-40 bg-gray-100 flex items-center justify-center">
-                ${r.coverImageUrl ? `<img src="${r.coverImageUrl}" class="w-full h-full object-cover"/>` : `<span class="text-3xl font-black text-gray-300">${r.name.charAt(0)}</span>`}
+              <div class="h-36 bg-gray-100 flex items-center justify-center">
+                ${r.coverImageUrl ? `<img src="${r.coverImageUrl}" class="w-full h-full object-cover"/>` : `<span class="text-3xl font-black text-gray-300">${r.name ? r.name.charAt(0) : 'R'}</span>`}
               </div>
               <div class="p-4 space-y-1">
                 <div class="flex justify-between items-center">
-                  <h3 class="font-bold text-gray-900">${r.name}</h3>
+                  <h3 class="font-bold text-gray-900">${r.name || 'Restaurant'}</h3>
                   <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold">★ ${r.rating || '4.0'}</span>
                 </div>
                 <p class="text-xs text-gray-500">${(r.cuisines || []).join(', ') || 'Multi-Cuisine'}</p>
@@ -311,10 +299,11 @@
           `;
         }).join('');
       } catch (err) {
-        loading.textContent = "Error loading restaurants: " + err.message;
+        loading.textContent = "Error: " + err.message;
       }
     }
 
+    // Load Restaurant Details & Menu
     async function openRestaurant(id) {
       showView('restaurant');
       const hero = document.getElementById('restaurantHero');
@@ -361,14 +350,10 @@
       }
     }
 
-    // ----------------------------------------------------
-    // 3. CART SYSTEM (Single Restaurant Rule)
-    // ----------------------------------------------------
+    // Cart Management
     function addToCart(menuItem) {
       if (cart.length > 0 && cart[0].restaurantId !== currentRestaurant.id) {
-        if (!confirm("Your cart contains dishes from another restaurant. Reset cart to add items from this restaurant?")) {
-          return;
-        }
+        if (!confirm("Your cart contains items from another restaurant. Clear cart to add from this restaurant?")) return;
         cart = [];
       }
 
@@ -451,9 +436,7 @@
       document.getElementById('billGrandTotal').textContent = `₹${grandTotal}`;
     }
 
-    // ----------------------------------------------------
-    // 4. CASH ON DELIVERY (COD) ORDER PLACEMENT
-    // ----------------------------------------------------
+    // Place COD Order
     async function handlePlaceCodOrder() {
       if (!currentUser) {
         showAuthModal();
@@ -529,7 +512,6 @@
       const card = document.getElementById('liveOrderCard');
       card.innerHTML = `Connecting to real-time status...`;
 
-      // Live Snapshot listener (Updates automatically without refreshing)
       onSnapshot(doc(db, 'orders', orderId), (snap) => {
         if (!snap.exists()) return;
         const d = snap.data();
@@ -543,7 +525,6 @@
       });
     }
 
-    // View Routing Helper
     function showView(view) {
       ['Home', 'Restaurant', 'Cart', 'OrderSuccess'].forEach(v => {
         document.getElementById(`view${v}`).classList.add('hidden');
@@ -558,7 +539,7 @@
       window.scrollTo(0, 0);
     }
 
-    // Initial Load
+    // Initial Trigger
     loadRestaurants();
   </script>
 </body>
