@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VarsBite — Food Delivery & Ordering</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans">
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="showView('home')">
+        <span class="text-2xl font-black text-brand-600 tracking-tight">VARSBITE</span>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <!-- Cart Button -->
+        <button onclick="showView('cart')" class="relative p-2 text-gray-700 hover:text-brand-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span id="cartBadge" class="hidden absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+        </button>
+
+        <!-- Auth Controls -->
+        <div id="authSection">
+          <button onclick="showAuthModal()" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700">Sign In</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="banner" class="hidden max-w-6xl mx-auto px-4 mt-4 w-full">
+    <div id="bannerContent" class="p-4 rounded-xl text-sm font-medium"></div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="flex-grow max-w-6xl mx-auto px-4 py-6 w-full">
+
+    <!-- VIEW 1: HOME (Restaurants & Categories) -->
+    <section id="viewHome" class="space-y-8">
+      <!-- Hero -->
+      <div class="bg-gradient-to-r from-brand-600 to-amber-500 rounded-3xl p-8 text-white shadow-sm flex flex-col md:flex-row items-center justify-between">
+        <div class="max-w-md">
+          <h1 class="text-3xl sm:text-4xl font-black leading-tight">Delicious food, delivered to you.</h1>
+          <p class="text-orange-100 text-sm mt-2">Order from your favorite restaurants with fast, reliable delivery.</p>
+        </div>
+      </div>
+
+      <!-- Restaurants List -->
+      <div>
+        <h2 class="text-xl font-black text-gray-900 mb-4">Popular Restaurants</h2>
+        <div id="restaurantsLoading" class="text-sm text-gray-400 py-8 text-center">Loading live restaurants from Firebase...</div>
+        <div id="restaurantsContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: RESTAURANT DETAILS & MENU -->
+    <section id="viewRestaurant" class="hidden space-y-6">
+      <button onclick="showView('home')" class="text-sm font-semibold text-brand-600 flex items-center gap-1">
+        ← Back to Restaurants
+      </button>
+
+      <div id="restaurantHero" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-2">
+        <!-- Injected Dynamically -->
+      </div>
+
+      <div>
+        <h3 class="text-lg font-black text-gray-900 mb-4">Menu Items</h3>
+        <div id="menuContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: CART & CHECKOUT -->
+    <section id="viewCart" class="hidden space-y-6 max-w-2xl mx-auto">
+      <button onclick="showView('home')" class="text-sm font-semibold text-brand-600 flex items-center gap-1">
+        ← Continue Shopping
+      </button>
+
+      <h2 class="text-2xl font-black text-gray-900">Your Cart</h2>
+      
+      <div id="cartEmptyState" class="hidden bg-white p-12 text-center rounded-2xl border border-gray-100 shadow-sm text-gray-500">
+        Your cart is empty. Explore restaurants to add delicious meals!
+      </div>
+
+      <div id="cartContent" class="space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+          <div id="cartRestaurantName" class="text-xs font-bold text-gray-400 uppercase tracking-wider"></div>
+          <div id="cartItemsList" class="divide-y divide-gray-100"></div>
+          
+          <!-- Price Breakdown -->
+          <div class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600">
+            <div class="flex justify-between"><span>Item Total</span><span id="billItemTotal" class="font-bold text-gray-900">₹0</span></div>
+            <div class="flex justify-between"><span>Delivery Fee</span><span id="billDeliveryFee">₹40</span></div>
+            <div class="flex justify-between"><span>Taxes & Charges (5% GST)</span><span id="billTaxes">₹0</span></div>
+            <div class="flex justify-between font-black text-base text-gray-900 border-t pt-2">
+              <span>Grand Total</span>
+              <span id="billGrandTotal" class="text-brand-600">₹0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Address Input -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+          <h3 class="text-sm font-bold text-gray-900">Delivery Address</h3>
+          <input type="text" id="custName" placeholder="Full Name" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
+          <input type="tel" id="custPhone" placeholder="Mobile Number" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
+          <textarea id="custAddress" rows="2" placeholder="House/Flat No, Street, Landmark, Pincode" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600"></textarea>
+        </div>
+
+        <!-- Checkout Actions -->
+        <button onclick="handlePlaceCodOrder()" id="btnPlaceOrder" class="w-full py-3.5 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition">
+          Place Cash on Delivery (COD) Order
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 4: ORDER SUCCESS / TRACKING -->
+    <section id="viewOrderSuccess" class="hidden space-y-6 max-w-lg mx-auto text-center py-10">
+      <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl font-black mx-auto">✓</div>
+      <h2 class="text-2xl font-black text-gray-900">Order Placed Successfully!</h2>
+      <p class="text-sm text-gray-500">Your order has been recorded in the VarsBite system with status <span class="font-bold text-gray-800">PLACED</span>.</p>
+      
+      <div id="liveOrderCard" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-left text-xs space-y-2"></div>
+
+      <button onclick="showView('home')" class="px-6 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800">
+        Back to Home
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white max-w-sm w-full p-6 rounded-3xl space-y-4 shadow-xl">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-black text-gray-900">Sign In to VarsBite</h3>
+        <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+      </div>
+      <p class="text-xs text-gray-500">Uses the existing Firebase Authentication system shared with the Android app.</p>
+      
+      <div class="space-y-3">
+        <input type="email" id="authEmail" placeholder="Email Address" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
+        <input type="password" id="authPassword" placeholder="Password" class="w-full p-2.5 text-sm border rounded-xl outline-none focus:border-brand-600" />
+        <button onclick="handleEmailLogin()" class="w-full py-2.5 bg-brand-600 text-white text-sm font-bold rounded-xl hover:bg-brand-700">Login</button>
+        <button onclick="handleEmailSignup()" class="w-full py-2.5 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase v10 Modular SDK via CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, serverTimestamp, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ----------------------------------------------------
+    // 1. FIREBASE CONFIGURATION (ENTER YOUR KEYS HERE)
+    // ----------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "YOUR_FIREBASE_API_KEY",
+      authDomain: "varsbite-prod.firebaseapp.com",
+      projectId: "varsbite-prod",
+      storageBucket: "varsbite-prod.appspot.com",
+      messagingSenderId: "102938475610",
+      appId: "1:102938475610:web:9c8e1d2f3a4b5c6d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Global State
+    let currentUser = null;
+    let currentRestaurant = null;
+    let cart = []; // [{ menuItem, restaurantId, restaurantName, quantity }]
+
+    // Expose helpers to window scope
+    window.showView = showView;
+    window.showAuthModal = () => document.getElementById('authModal').classList.remove('hidden');
+    window.closeAuthModal = () => document.getElementById('authModal').classList.add('hidden');
+    window.handleEmailLogin = handleEmailLogin;
+    window.handleEmailSignup = handleEmailSignup;
+    window.handleLogout = handleLogout;
+    window.openRestaurant = openRestaurant;
+    window.addToCart = addToCart;
+    window.updateCartQty = updateCartQty;
+    window.handlePlaceCodOrder = handlePlaceCodOrder;
+
+    // Auth Observer
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      renderAuthSection();
+      if (user) {
+        closeAuthModal();
+      }
+    });
+
+    function renderAuthSection() {
+      const container = document.getElementById('authSection');
+      if (currentUser) {
+        container.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-semibold text-gray-700">${currentUser.email.split('@')[0]}</span>
+            <button onclick="handleLogout()" class="text-xs text-red-600 font-bold hover:underline">Logout</button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="showAuthModal()" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700">Sign In</button>
+        `;
+      }
+    }
+
+    async function handleEmailLogin() {
+      const e = document.getElementById('authEmail').value.trim();
+      const p = document.getElementById('authPassword').value.trim();
+      if (!e || !p) return notify('Please enter email & password', 'error');
+      try {
+        await signInWithEmailAndPassword(auth, e, p);
+        notify('Logged in successfully!', 'success');
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function handleEmailSignup() {
+      const e = document.getElementById('authEmail').value.trim();
+      const p = document.getElementById('authPassword').value.trim();
+      if (!e || !p) return notify('Please enter email & password', 'error');
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, e, p);
+        // Default role: customer (No self-assigning admin)
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          uid: cred.user.uid,
+          email: e,
+          role: 'customer',
+          createdAt: serverTimestamp()
+        }, { merge: true });
+        notify('Account created successfully!', 'success');
+      } catch (err) {
+        notify(err.message, 'error');
+      }
+    }
+
+    async function handleLogout() {
+      await signOut(auth);
+      notify('Logged out', 'info');
+    }
+
+    function notify(msg, type = 'info') {
+      const b = document.getElementById('banner');
+      const bc = document.getElementById('bannerContent');
+      b.classList.remove('hidden');
+      bc.textContent = msg;
+      if (type === 'error') bc.className = 'p-3 rounded-xl text-sm bg-red-100 text-red-800 border border-red-200';
+      else if (type === 'success') bc.className = 'p-3 rounded-xl text-sm bg-green-100 text-green-800 border border-green-200';
+      else bc.className = 'p-3 rounded-xl text-sm bg-amber-100 text-amber-800 border border-amber-200';
+      setTimeout(() => b.classList.add('hidden'), 4000);
+    }
+
+    // ----------------------------------------------------
+    // 2. RESTAURANTS & MENU LOADER
+    // ----------------------------------------------------
+    async function loadRestaurants() {
+      const container = document.getElementById('restaurantsContainer');
+      const loading = document.getElementById('restaurantsLoading');
+      try {
+        const snap = await getDocs(collection(db, 'restaurants'));
+        loading.classList.add('hidden');
+        if (snap.empty) {
+          container.innerHTML = `<div class="col-span-3 text-center text-gray-400 py-10">No restaurants found in database.</div>`;
+          return;
+        }
+
+        container.innerHTML = snap.docs.map(d => {
+          const r = { id: d.id, ...d.data() };
+          return `
+            <div onclick="openRestaurant('${r.id}')" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md cursor-pointer transition">
+              <div class="h-40 bg-gray-100 flex items-center justify-center">
+                ${r.coverImageUrl ? `<img src="${r.coverImageUrl}" class="w-full h-full object-cover"/>` : `<span class="text-3xl font-black text-gray-300">${r.name.charAt(0)}</span>`}
+              </div>
+              <div class="p-4 space-y-1">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-bold text-gray-900">${r.name}</h3>
+                  <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold">★ ${r.rating || '4.0'}</span>
+                </div>
+                <p class="text-xs text-gray-500">${(r.cuisines || []).join(', ') || 'Multi-Cuisine'}</p>
+                <div class="text-[11px] text-gray-400 pt-2 flex justify-between">
+                  <span>${r.avgDeliveryTimeMinutes || 30} mins</span>
+                  <span>${r.isOpen ? 'Open Now' : 'Closed'}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        loading.textContent = "Error loading restaurants: " + err.message;
+      }
+    }
+
+    async function openRestaurant(id) {
+      showView('restaurant');
+      const hero = document.getElementById('restaurantHero');
+      const menuContainer = document.getElementById('menuContainer');
+      hero.innerHTML = `<div class="text-xs text-gray-400">Loading details...</div>`;
+      menuContainer.innerHTML = `<div class="text-xs text-gray-400">Loading menu...</div>`;
+
+      try {
+        const docSnap = await getDoc(doc(db, 'restaurants', id));
+        if (!docSnap.exists()) return;
+        currentRestaurant = { id: docSnap.id, ...docSnap.data() };
+
+        hero.innerHTML = `
+          <h2 class="text-2xl font-black text-gray-900">${currentRestaurant.name}</h2>
+          <p class="text-xs text-gray-500">${currentRestaurant.address?.area || ''}, ${currentRestaurant.address?.city || ''}</p>
+          <div class="text-xs font-semibold text-brand-600">Avg Time: ${currentRestaurant.avgDeliveryTimeMinutes || 30} Mins</div>
+        `;
+
+        const menuSnap = await getDocs(collection(db, 'restaurants', id, 'menu'));
+        if (menuSnap.empty) {
+          menuContainer.innerHTML = `<div class="text-sm text-gray-400">No food items added yet.</div>`;
+          return;
+        }
+
+        menuContainer.innerHTML = menuSnap.docs.map(m => {
+          const item = { id: m.id, ...m.data() };
+          return `
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-green-600' : 'bg-red-600'}"></span>
+                  <h4 class="font-bold text-sm text-gray-900">${item.name}</h4>
+                </div>
+                <div class="text-xs font-semibold text-gray-700 mt-1">₹${item.discountPrice ?? item.price}</div>
+              </div>
+              <button onclick='addToCart(${JSON.stringify(item)})' class="px-3 py-1.5 bg-orange-50 border border-brand-600 text-brand-600 font-bold text-xs rounded-lg hover:bg-brand-600 hover:text-white transition">
+                + ADD
+              </button>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        menuContainer.innerHTML = `<div class="text-xs text-red-500">${err.message}</div>`;
+      }
+    }
+
+    // ----------------------------------------------------
+    // 3. CART SYSTEM (Single Restaurant Rule)
+    // ----------------------------------------------------
+    function addToCart(menuItem) {
+      if (cart.length > 0 && cart[0].restaurantId !== currentRestaurant.id) {
+        if (!confirm("Your cart contains dishes from another restaurant. Reset cart to add items from this restaurant?")) {
+          return;
+        }
+        cart = [];
+      }
+
+      const existing = cart.find(c => c.menuItem.id === menuItem.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          menuItem,
+          restaurantId: currentRestaurant.id,
+          restaurantName: currentRestaurant.name,
+          quantity: 1
+        });
+      }
+      updateCartUI();
+      notify(`Added ${menuItem.name} to cart!`, 'success');
+    }
+
+    function updateCartQty(itemId, delta) {
+      cart = cart.map(item => {
+        if (item.menuItem.id === itemId) {
+          const n = item.quantity + delta;
+          return n > 0 ? { ...item, quantity: n } : null;
+        }
+        return item;
+      }).filter(Boolean);
+      updateCartUI();
+      renderCartView();
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cartBadge');
+      const count = cart.reduce((sum, i) => sum + i.quantity, 0);
+      if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function renderCartView() {
+      const emptyState = document.getElementById('cartEmptyState');
+      const cartContent = document.getElementById('cartContent');
+      const list = document.getElementById('cartItemsList');
+
+      if (cart.length === 0) {
+        emptyState.classList.remove('hidden');
+        cartContent.classList.add('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      cartContent.classList.remove('hidden');
+
+      document.getElementById('cartRestaurantName').textContent = cart[0].restaurantName;
+
+      list.innerHTML = cart.map(i => `
+        <div class="py-3 flex justify-between items-center text-sm">
+          <div>
+            <div class="font-bold text-gray-800">${i.menuItem.name}</div>
+            <div class="text-xs text-gray-500">₹${i.menuItem.discountPrice ?? i.menuItem.price}</div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="updateCartQty('${i.menuItem.id}', -1)" class="w-6 h-6 border rounded font-bold text-gray-600">-</button>
+            <span class="text-xs font-bold">${i.quantity}</span>
+            <button onclick="updateCartQty('${i.menuItem.id}', 1)" class="w-6 h-6 border rounded font-bold text-brand-600">+</button>
+          </div>
+        </div>
+      `).join('');
+
+      const itemTotal = cart.reduce((sum, i) => sum + (i.menuItem.discountPrice ?? i.menuItem.price) * i.quantity, 0);
+      const deliveryFee = itemTotal > 500 ? 0 : 40;
+      const taxes = Math.round(itemTotal * 0.05);
+      const grandTotal = itemTotal + deliveryFee + taxes;
+
+      document.getElementById('billItemTotal').textContent = `₹${itemTotal}`;
+      document.getElementById('billDeliveryFee').textContent = deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`;
+      document.getElementById('billTaxes').textContent = `₹${taxes}`;
+      document.getElementById('billGrandTotal').textContent = `₹${grandTotal}`;
+    }
+
+    // ----------------------------------------------------
+    // 4. CASH ON DELIVERY (COD) ORDER PLACEMENT
+    // ----------------------------------------------------
+    async function handlePlaceCodOrder() {
+      if (!currentUser) {
+        showAuthModal();
+        return notify('Please login first to place an order.', 'error');
+      }
+
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      const addr = document.getElementById('custAddress').value.trim();
+
+      if (!name || !phone || !addr) {
+        return notify('Please fill all delivery address fields.', 'error');
+      }
+
+      const btn = document.getElementById('btnPlaceOrder');
+      btn.disabled = true;
+      btn.textContent = 'Placing Order...';
+
+      const itemTotal = cart.reduce((sum, i) => sum + (i.menuItem.discountPrice ?? i.menuItem.price) * i.quantity, 0);
+      const deliveryFee = itemTotal > 500 ? 0 : 40;
+      const taxes = Math.round(itemTotal * 0.05);
+      const grandTotal = itemTotal + deliveryFee + taxes;
+
+      const orderPayload = {
+        customerId: currentUser.uid,
+        customerName: name,
+        customerPhone: phone,
+        restaurantId: cart[0].restaurantId,
+        restaurantName: cart[0].restaurantName,
+        restaurantAddress: 'Store Pickup Point',
+        deliveryAddress: {
+          name,
+          mobile: phone,
+          street: addr,
+          city: 'Main City',
+          pincode: '000000'
+        },
+        items: cart.map(i => ({
+          itemId: i.menuItem.id,
+          name: i.menuItem.name,
+          price: i.menuItem.discountPrice ?? i.menuItem.price,
+          quantity: i.quantity,
+          isVeg: !!i.menuItem.isVeg,
+          subtotal: (i.menuItem.discountPrice ?? i.menuItem.price) * i.quantity
+        })),
+        itemTotal,
+        deliveryFee,
+        packagingFee: 0,
+        taxAmount: taxes,
+        discountAmount: 0,
+        grandTotal,
+        paymentMethod: 'COD',
+        paymentStatus: 'PENDING',
+        orderStatus: 'PLACED',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      try {
+        const docRef = await addDoc(collection(db, 'orders'), orderPayload);
+        cart = [];
+        updateCartUI();
+        showLiveOrder(docRef.id);
+      } catch (err) {
+        notify('Order failed: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Place Cash on Delivery (COD) Order';
+      }
+    }
+
+    function showLiveOrder(orderId) {
+      showView('orderSuccess');
+      const card = document.getElementById('liveOrderCard');
+      card.innerHTML = `Connecting to real-time status...`;
+
+      // Live Snapshot listener (Updates automatically without refreshing)
+      onSnapshot(doc(db, 'orders', orderId), (snap) => {
+        if (!snap.exists()) return;
+        const d = snap.data();
+        card.innerHTML = `
+          <div><strong>Order ID:</strong> #${snap.id.slice(-6)}</div>
+          <div><strong>Restaurant:</strong> ${d.restaurantName}</div>
+          <div><strong>Status:</strong> <span class="bg-orange-100 text-brand-600 px-2 py-0.5 rounded font-bold">${d.orderStatus}</span></div>
+          <div><strong>Payment:</strong> ${d.paymentMethod} (${d.paymentStatus})</div>
+          <div><strong>Total:</strong> ₹${d.grandTotal}</div>
+        `;
+      });
+    }
+
+    // View Routing Helper
+    function showView(view) {
+      ['Home', 'Restaurant', 'Cart', 'OrderSuccess'].forEach(v => {
+        document.getElementById(`view${v}`).classList.add('hidden');
+      });
+      if (view === 'home') document.getElementById('viewHome').classList.remove('hidden');
+      if (view === 'restaurant') document.getElementById('viewRestaurant').classList.remove('hidden');
+      if (view === 'cart') {
+        document.getElementById('viewCart').classList.remove('hidden');
+        renderCartView();
+      }
+      if (view === 'orderSuccess') document.getElementById('viewOrderSuccess').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+
+    // Initial Load
+    loadRestaurants();
+  </script>
+</body>
+</html>
